@@ -37,7 +37,7 @@ button:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-
 .brand h1 span{background:var(--accent);color:var(--accent-ink);padding:0 6px;margin-left:2px}
 .brand small{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .ghost{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:14px;color:var(--muted)}
-.ghost:hover{color:var(--ink);border-color:var(--muted)}
+@media (hover:hover){.ghost:hover{color:var(--ink);border-color:var(--muted)}}
 
 /* home */
 .hero{background:var(--asphalt);color:var(--asphalt-ink);border-radius:14px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
@@ -49,7 +49,7 @@ button:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-
 .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:560px){.modes{grid-template-columns:1fr}}
 .mode{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,transform .15s}
-.mode:hover{border-color:var(--ink);transform:translateY(-1px)}
+@media (hover:hover){.mode:hover{border-color:var(--ink);transform:translateY(-1px)}}
 .mode h3{font-size:24px;font-weight:700;text-transform:uppercase;display:flex;align-items:center;gap:8px}
 .mode p{margin:0;color:var(--muted);font-size:14px}
 .mode .tag{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:4px;background:var(--accent);color:var(--accent-ink);font-weight:700}
@@ -61,7 +61,7 @@ button:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:14px;display:flex;gap:8px;align-items:center}
 .chip .pct{font-family:var(--mono);font-size:12px;color:var(--muted)}
-.chip:hover{border-color:var(--ink)}
+@media (hover:hover){.chip:hover{border-color:var(--ink)}}
 .chip.sel{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .bar{height:4px;width:46px;background:var(--line);border-radius:2px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--good)}
@@ -87,7 +87,7 @@ kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-b
 .hint{font-size:13px;color:var(--muted);margin-top:-8px}
 .opts{display:flex;flex-direction:column;gap:10px}
 .opt{display:flex;gap:14px;align-items:center;text-align:left;background:var(--bg);border:2px solid transparent;border-radius:10px;padding:12px 14px;min-height:56px;transition:border-color .12s,background .12s}
-.opt:hover:not(:disabled){border-color:var(--muted)}
+@media (hover:hover){.opt:hover:not(:disabled):not(.sel){border-color:var(--muted)}}
 .opt .k{flex:none;width:34px;height:34px;border-radius:7px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:20px;background:var(--surface);border:1px solid var(--line)}
 .opt .t{min-width:0}
 .opt.sel{border-color:var(--ink)}
@@ -127,6 +127,40 @@ kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-b
 .rv .re{font-size:14px;color:var(--muted)}
 .filters{display:flex;gap:8px;flex-wrap:wrap}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20}
+html{-webkit-text-size-adjust:100%}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.opt:active:not(:disabled){transform:scale(.985)}
+#fb{scroll-margin-bottom:120px}
+@media (hover:none){.keys{display:none}}
+@media (max-width:640px){
+  body{padding-block:10px 120px}
+  .wrap{gap:14px}
+  .brand h1{font-size:28px}
+  .hero{padding:16px;gap:12px;border-radius:12px}
+  .hero h2{font-size:28px}
+  .hero p{font-size:15px}
+  .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .kpis b{font-size:26px}
+  .mode{padding:14px}
+  .mode h3{font-size:21px}
+  .chip{padding:9px 12px}
+  .qhead{gap:8px}
+  .counter{font-size:24px}
+  .card{padding:16px;gap:14px;border-radius:12px}
+  .question{font-size:19px}
+  .opt{min-height:60px;padding:12px;gap:12px}
+  .opt .k{width:36px;height:36px}
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:15;margin:0;gap:8px;flex-wrap:wrap;
+    background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.08);
+    padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .dock .btn{flex:1;padding:16px;font-size:22px}
+  .dock .btn.sec{flex:0 0 auto;padding:16px 14px;font-size:18px}
+  .dock .streak{flex-basis:100%;text-align:center;margin:0!important}
+  .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .score .big{font-size:84px}
+  .verdict{font-size:24px}
+  .results-actions .btn{flex:1}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @keyframes pop{from{transform:scale(.98);opacity:.6}to{transform:none;opacity:1}}
 .card.anim{animation:pop .18s ease-out}
@@ -411,7 +445,7 @@ function home(){
     </div>
   </section>
   <div class="modes">
-    <button class="mode primary" data-m="exam"><h3>Série examen <span class="tag">40Q · 20S</span></h3><p>Conditions réelles : chrono par question, aucune correction avant la fin. 5 fautes maximum.</p></button>
+    <button class="mode primary" data-m="exam"><h3>Série examen <span class="tag">40Q · 30S</span></h3><p>Chrono de 30 s par question, aucune correction avant la fin. 5 fautes maximum.</p></button>
     <button class="mode" data-m="rafale"><h3>Rafale <span class="tag">∞</span></h3><p>Correction immédiate, passage automatique quand c'est juste. Les questions ratées reviennent plus souvent.</p></button>
     <button class="mode" data-m="trap"><h3>Pièges <span class="tag">${traps}</span></h3><p>Uniquement les questions à double lecture et les exceptions qui coûtent des points.</p></button>
     <button class="mode" data-m="errors" ${errs?"":"disabled"}><h3>Mes erreurs <span class="tag">${errs}</span></h3><p>${errs?"Les questions ratées à ta dernière tentative, jusqu'à ce qu'elles soient justes.":"Aucune erreur enregistrée pour l'instant."}</p></button>
@@ -463,7 +497,7 @@ function render(){
     <div class="hint">${isExam()?"Une ou plusieurs bonnes réponses":(multi?"Plusieurs bonnes réponses":"Une seule bonne réponse")}</div>
     <div class="opts">${q.o.map((o,k)=>`<button class="opt" data-k="${k}" id="opt${k}"><span class="k">${L[k]}</span><span class="t">${esc(o)}</span></button>`).join("")}</div>
     <div id="fb"></div>
-    <div class="actions">
+    <div class="actions dock">
       ${S.mode==="rafale"?`<span class="streak" style="margin-right:auto;align-self:center">Série en cours <b>${S.streak}</b> · record <b>${S.bestStreak}</b></span>`:""}
       ${S.mode==="rafale"?'<button class="btn sec" id="stop">Terminer</button>':""}
       <button class="btn y" id="go" disabled>Valider</button>
@@ -473,6 +507,7 @@ function render(){
   $("#go").onclick=action;
   $("#quit").onclick=()=>{ if(S.results.length && S.mode!=="exam") results(); else home(); };
   if($("#stop")) $("#stop").onclick=results;
+  window.scrollTo(0,0);
   if(isExam()) startTimer();
 }
 function toggle(k){
@@ -495,7 +530,9 @@ function validate(){
     const good=q.a.includes(i), s=S.sel.has(i);
     if(good&&s)b.classList.add("right"); else if(s)b.classList.add("wrong"); else if(good)b.classList.add("missed","right");});
   $("#fb").innerHTML=`<div class="fb ${ok?"ok":"ko"}"><strong>${ok?"Juste":"Faux"}</strong>${ok?"":`<p>Bonne réponse : <b>${q.a.map(k=>L[k]).join(" + ")}</b></p>`}<p>${esc(q.e)}</p></div>`;
-  const go=$("#go"); go.disabled=false; go.textContent="Suivante →"; go.focus();
+  const go=$("#go"); go.disabled=false; go.textContent="Suivante →"; go.focus({preventScroll:true});
+  try{navigator.vibrate&&navigator.vibrate(ok?12:[30,40,30])}catch(e){}
+  requestAnimationFrame(()=>{try{$("#fb").scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}});
   if(S.mode==="rafale"){const st=document.querySelector(".streak");if(st)st.innerHTML=`Série en cours <b>${S.streak}</b> · record <b>${S.bestStreak}</b>`;
     const c=document.querySelector(".counter");if(c)c.innerHTML=`${S.results.filter(r=>r.ok).length}<small>/${S.results.length}</small>`;}
   if(ok){ const id=S.i; setTimeout(()=>{ if(S&&S.i===id&&S.answered) next(); }, q.e.length>140?2600:1700); }
@@ -510,7 +547,7 @@ function next(){
 
 /* ============ CHRONO ============ */
 function startTimer(){
-  stopTimer(); const dur=20000, t0=performance.now(); const el=$("#timer");
+  stopTimer(); const dur=30000, t0=performance.now(); const el=$("#timer");
   timerInt=setInterval(()=>{const r=Math.max(0,1-(performance.now()-t0)/dur);
     if(el){el.firstChild.style.transform=`scaleX(${r})`;el.classList.toggle("low",r<.25)}
     if(r<=0){stopTimer();validate()}},100);
@@ -540,7 +577,7 @@ function results(){
     <div class="score"><div class="big">${good}<small>/${n}</small></div>
       ${exam?`<span class="verdict ${pass?"pass":"fail"}">${pass?"Reçu":"Ajourné"}</span>`:""}</div>
     <p style="margin:0;color:var(--muted)">${exam?(pass?`Moins de 6 fautes : c'est le niveau de l'examen. ${40-good} faute${40-good>1?"s":""}.`:`${40-good} fautes, il en faut 5 maximum. Revois les explications ci-dessous puis lance « Mes erreurs ».`):`${n-good} erreur${n-good>1?"s":""} sur ${n} questions${S.bestStreak?` · meilleure série ${S.bestStreak}`:""}.`}</p>
-    <div class="actions" style="justify-content:flex-start">
+    <div class="actions results-actions" style="justify-content:flex-start">
       <button class="btn y" id="again">${exam?"Nouvelle série":"Recommencer"}</button>
       ${errorsList().length?`<button class="btn sec" id="errs">Revoir mes erreurs (${errorsList().length})</button>`:""}
     </div>
