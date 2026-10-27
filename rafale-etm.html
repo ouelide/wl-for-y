@@ -1,0 +1,568 @@
+<title>Rafale ETM</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one central column like a tablet at the exam centre; road-marking dashes as progress, signal yellow as the single accent */
+:root{
+  --bg:#eef0ed; --surface:#ffffff; --ink:#15191c; --muted:#5a636a; --line:#d4d8d3;
+  --accent:#f2b705; --accent-ink:#1d1700; --asphalt:#2a3036; --asphalt-ink:#f3f4f1;
+  --good:#1b7f45; --good-bg:#e3f3e9; --bad:#c2352b; --bad-bg:#fbe7e5; --trap:#8a4b00; --trap-bg:#fff1cc;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111417; --surface:#1a1e22; --ink:#eceee9; --muted:#9aa3aa; --line:#2b3136;
+  --accent:#f5c518; --accent-ink:#1d1700; --asphalt:#0b0d0f; --asphalt-ink:#eceee9;
+  --good:#47c37c; --good-bg:#16291e; --bad:#f06559; --bad-bg:#331a18; --trap:#f5c518; --trap-bg:#2c2510; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111417; --surface:#1a1e22; --ink:#eceee9; --muted:#9aa3aa; --line:#2b3136;
+  --accent:#f5c518; --accent-ink:#1d1700; --asphalt:#0b0d0f; --asphalt-ink:#eceee9;
+  --good:#47c37c; --good-bg:#16291e; --bad:#f06559; --bad-bg:#331a18; --trap:#f5c518; --trap-bg:#2c2510; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-size:34px;font-weight:800;text-transform:uppercase;line-height:1}
+.brand h1 span{background:var(--accent);color:var(--accent-ink);padding:0 6px;margin-left:2px}
+.brand small{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.ghost{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:14px;color:var(--muted)}
+.ghost:hover{color:var(--ink);border-color:var(--muted)}
+
+/* home */
+.hero{background:var(--asphalt);color:var(--asphalt-ink);border-radius:14px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.hero h2{font-size:clamp(30px,6vw,46px);font-weight:800;text-transform:uppercase;line-height:.95}
+.hero p{margin:0;max-width:56ch;opacity:.85}
+.road{height:6px;background:repeating-linear-gradient(90deg,var(--accent) 0 38px,transparent 38px 52px);opacity:.9}
+.kpis{display:flex;gap:22px;flex-wrap:wrap;font-family:var(--mono);font-size:13px}
+.kpis b{display:block;font-family:var(--display);font-size:30px;font-weight:700;line-height:1;color:var(--accent)}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.modes{grid-template-columns:1fr}}
+.mode{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,transform .15s}
+.mode:hover{border-color:var(--ink);transform:translateY(-1px)}
+.mode h3{font-size:24px;font-weight:700;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.mode p{margin:0;color:var(--muted);font-size:14px}
+.mode .tag{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:4px;background:var(--accent);color:var(--accent-ink);font-weight:700}
+.mode.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mode.primary p{color:var(--accent-ink);opacity:.8}
+.mode.primary .tag{background:var(--accent-ink);color:var(--accent)}
+.mode:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.themes{display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:14px;display:flex;gap:8px;align-items:center}
+.chip .pct{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.chip:hover{border-color:var(--ink)}
+.chip.sel{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.bar{height:4px;width:46px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good)}
+.keys{font-size:13px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--surface);color:var(--ink)}
+
+/* quiz */
+.qhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.qmeta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.pill.trap{background:var(--trap-bg);color:var(--trap);border-color:transparent;font-weight:700}
+.counter{font-family:var(--display);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.counter small{font-size:18px;color:var(--muted)}
+.lane{display:flex;gap:4px;height:8px}
+.lane i{flex:1;border-radius:2px;background:var(--line)}
+.lane i.done{background:var(--ink)}
+.lane i.ok{background:var(--good)} .lane i.ko{background:var(--bad)} .lane i.cur{background:var(--accent)}
+.timer{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--accent);transform-origin:left;transition:transform .1s linear}
+.timer.low i{background:var(--bad)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:18px}
+.question{font-size:clamp(19px,3.2vw,23px);font-weight:700;line-height:1.35;margin:0}
+.hint{font-size:13px;color:var(--muted);margin-top:-8px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:14px;align-items:center;text-align:left;background:var(--bg);border:2px solid transparent;border-radius:10px;padding:12px 14px;min-height:56px;transition:border-color .12s,background .12s}
+.opt:hover:not(:disabled){border-color:var(--muted)}
+.opt .k{flex:none;width:34px;height:34px;border-radius:7px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:20px;background:var(--surface);border:1px solid var(--line)}
+.opt .t{min-width:0}
+.opt.sel{border-color:var(--ink)}
+.opt.sel .k{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt.right .k{background:var(--good);color:#fff;border-color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt.wrong .k{background:var(--bad);color:#fff;border-color:var(--bad)}
+.opt.missed{border-color:var(--good);border-style:dashed}
+.opt:disabled{cursor:default}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn{border:none;border-radius:10px;padding:12px 20px;font-family:var(--display);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--ink);color:var(--surface)}
+.btn.y{background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.fb{border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.fb.ok{background:var(--good-bg)} .fb.ko{background:var(--bad-bg)}
+.fb strong{font-family:var(--display);font-size:22px;text-transform:uppercase;letter-spacing:.02em}
+.fb.ok strong{color:var(--good)} .fb.ko strong{color:var(--bad)}
+.fb p{margin:0}
+.streak{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.streak b{color:var(--ink)}
+
+/* results */
+.score{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.score .big{font-family:var(--display);font-size:clamp(70px,16vw,110px);font-weight:800;line-height:.85;font-variant-numeric:tabular-nums}
+.score .big small{font-size:.4em;color:var(--muted)}
+.verdict{font-family:var(--display);font-size:30px;font-weight:800;text-transform:uppercase;padding:4px 12px;border-radius:8px}
+.verdict.pass{background:var(--good);color:#fff} .verdict.fail{background:var(--bad);color:#fff}
+.review{display:flex;flex-direction:column;gap:10px}
+.rv{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--bad);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.rv.ok{border-left-color:var(--good)}
+.rv .rq{font-weight:700}
+.rv .ra{font-size:14px}
+.rv .ra b{color:var(--good)}
+.rv .ry{font-size:14px;color:var(--bad)}
+.rv .re{font-size:14px;color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@keyframes pop{from{transform:scale(.98);opacity:.6}to{transform:none;opacity:1}}
+.card.anim{animation:pop .18s ease-out}
+</style>
+
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ============ BANQUE DE QUESTIONS ============
+   [thème, piège(0/1), question, [réponses], [indices des bonnes réponses], explication] */
+const TH={
+ S:"Points & sanctions", P:"Permis & catégories", V:"Vitesses & distances", R:"Règles de circulation",
+ L:"Signalisation", A:"Alcool, drogues, fatigue", E:"Équipement & machine", C:"Conduite moto",
+ M:"Météo & adhérence", X:"Passager & chargement", U:"Accident & secours", D:"Papiers & environnement"
+};
+const RAW=[
+// ---------- PERMIS & CATÉGORIES ----------
+["P",0,"Combien de points compte un permis probatoire au départ ?",["3 points","6 points","8 points","12 points"],[1],"Permis probatoire = 6 points au départ. Le maximum de 12 n'est atteint qu'à la fin de la période probatoire."],
+["P",0,"Premier permis, A2 obtenu sans conduite accompagnée. Ma période probatoire dure :",["1 an","2 ans","3 ans","5 ans"],[2],"3 ans sans AAC, 2 ans avec AAC."],
+["P",1,"J'ai le permis B depuis 5 ans et je viens d'obtenir le permis A2 :",["Je suis en probatoire 3 ans","Je ne suis pas en probatoire","Mon capital passe à 6 points","Je garde mon capital de points actuel"],[1,3],"Piège : si tu as déjà un permis depuis plus de 3 ans, le nouveau permis n'est pas probatoire. Un seul capital de points pour toutes les catégories."],
+["P",0,"Puissance maximale d'une moto conduite avec le permis A2 :",["25 kW","35 kW","47 kW","56 kW"],[1],"A2 = 35 kW maxi (environ 47,5 ch) et rapport puissance/poids ≤ 0,2 kW/kg."],
+["P",1,"Une moto peut être bridée pour le permis A2 si sa puissance d'origine ne dépasse pas :",["35 kW","47 kW","70 kW","Il n'y a pas de limite d'origine"],[2],"Une moto bridée à 35 kW ne doit pas dépasser le double, soit 70 kW, dans sa version d'origine."],
+["P",0,"Le rapport poids/puissance maximal pour un permis A2 est de :",["0,1 kW/kg","0,2 kW/kg","0,3 kW/kg","0,5 kW/kg"],[1],"0,2 kW/kg maximum. Les deux conditions (35 kW et 0,2 kW/kg) doivent être respectées."],
+["P",1,"Pour passer du permis A2 au permis A, je dois :",["Avoir 2 ans de permis A2","Suivre une formation de 7 heures","Repasser l'examen du code","Repasser l'épreuve plateau"],[0,1],"2 ans d'ancienneté en A2 + formation de 7 h en auto-école. Pas d'examen à repasser."],
+["P",0,"Âge minimum pour passer le permis A2 :",["16 ans","17 ans","18 ans","20 ans"],[2],"18 ans pour l'A2. 16 ans pour l'A1, 24 ans pour un accès direct au A."],
+["P",0,"Le permis A1 permet de conduire une moto :",["Jusqu'à 125 cm³","Jusqu'à 11 kW","Jusqu'à 35 kW","Dès 16 ans"],[0,1,3],"A1 = 125 cm³ max, 11 kW max, rapport 0,1 kW/kg, accessible dès 16 ans."],
+["P",1,"Avec mon permis B depuis 3 ans, je peux conduire une 125 cm³ :",["Directement, sans rien faire","Après une formation de 7 heures","Après avoir passé le permis A1","Jamais"],[1],"Permis B depuis au moins 2 ans + formation de 7 h (sauf si tu as déjà conduit une 125 avant 2011 avec assurance)."],
+["P",1,"Je conduis une moto non bridée de 70 kW avec un permis A2. C'est :",["Toléré si je roule doucement","Une simple contravention","L'équivalent d'une conduite sans le permis requis","Autorisé pendant 1 an"],[2],"La moto ne correspond pas à ta catégorie : c'est un défaut de permis, donc un délit (et l'assurance peut refuser de couvrir)."],
+["P",0,"En période probatoire sans conduite accompagnée et sans infraction, je gagne chaque année :",["1 point","2 points","3 points","4 points"],[1],"6 → 8 → 10 → 12 points en 3 ans sans infraction (3 points par an avec l'AAC, 2 ans pour atteindre 12)."],
+["P",1,"En probatoire, je commets une infraction qui me retire 3 points. Je dois :",["Rien de particulier","Suivre obligatoirement un stage de sensibilisation dans les 4 mois","Repasser le code","Payer une amende majorée automatique"],[1],"Retrait de 3 points ou plus en probatoire = lettre 48N et stage obligatoire dans les 4 mois, sinon amende et suspension possibles."],
+
+// ---------- POINTS & SANCTIONS ----------
+["S",1,"Je suis flashé à 4 km/h au-dessus de la limite (après marge). Je perds :",["0 point","1 point","2 points","3 points"],[0],"Depuis le 1er janvier 2024, les excès de moins de 5 km/h ne retirent plus de point. L'amende reste due."],
+["S",0,"Excès de vitesse de 25 km/h : retrait de points ?",["1 point","2 points","3 points","4 points"],[1],"De 20 à moins de 30 km/h : 2 points. De 30 à 40 : 3 points. De 40 à 50 : 4 points. 50 et plus : 6 points."],
+["S",0,"Excès de vitesse de 45 km/h :",["3 points","4 points","Suspension de permis possible jusqu'à 3 ans","Confiscation automatique de la moto"],[1,2],"De 40 à moins de 50 km/h : 4 points et suspension possible jusqu'à 3 ans."],
+["S",0,"Excès de vitesse de 50 km/h ou plus :",["4 points","6 points","Suspension possible","Rétention immédiate du permis possible"],[1,2,3],"6 points, rétention immédiate, suspension. En récidive c'est un délit."],
+["S",0,"Je passe un feu rouge. Je perds :",["2 points","3 points","4 points","6 points"],[2],"Feu rouge ou stop non respecté : 4 points et 135 €."],
+["S",0,"Téléphone tenu en main en roulant :",["135 €","3 points","1 point","Rétention du permis possible si autre infraction en même temps"],[0,1,3],"135 € et 3 points. Si en plus tu commets une autre infraction (vitesse, feu...), rétention et suspension possibles."],
+["S",1,"Mon casque est sur la tête mais la jugulaire n'est pas attachée :",["C'est autorisé en ville","C'est considéré comme un casque non porté","Je risque 3 points","Je risque 1 point"],[1,2],"Casque non attaché = casque non porté : 135 € et 3 points."],
+["S",0,"Je roule sans gants homologués :",["68 € d'amende","1 point retiré","3 points retirés","Aucune sanction, c'est conseillé"],[0,1],"Gants CE obligatoires depuis 2016 pour le conducteur et le passager : 68 € et 1 point pour le conducteur."],
+["S",0,"Distance de sécurité insuffisante :",["1 point","2 points","3 points","Pas de retrait de points"],[2],"Non-respect des distances de sécurité : 3 points et 135 €."],
+["S",1,"Je chevauche une ligne continue sans la franchir :",["0 point","1 point","3 points","Ce n'est pas une infraction"],[1],"Chevauchement : 1 point. Franchissement : 3 points."],
+["S",0,"Je ne cède pas le passage à un piéton engagé :",["2 points","4 points","6 points","Amende uniquement"],[2],"Refus de priorité à un piéton : 6 points et 135 €."],
+["S",0,"Un stage de récupération de points permet de récupérer :",["2 points","4 points","6 points","Tous les points"],[1],"4 points maximum, une fois par an, sans dépasser le plafond de ton permis."],
+["S",1,"J'ai perdu 1 point. Je le récupère :",["Après 6 mois sans nouvelle infraction","Après 1 an","Après 2 ans","Jamais automatiquement"],[0],"Une infraction à 1 point est récupérée après 6 mois sans nouvelle infraction."],
+["S",0,"Après une infraction de classe 1 à 3, je récupère tous mes points si je ne commets pas d'infraction pendant :",["6 mois","1 an","2 ans","3 ans"],[2],"2 ans pour les contraventions des 3 premières classes, 3 ans pour les autres (4e classe, délits)."],
+["S",0,"Mon permis est invalidé pour solde de points nul. Je dois attendre avant de repasser le permis :",["1 mois","3 mois","6 mois","2 ans"],[2],"6 mois (1 an si c'est la deuxième fois en 5 ans). Il faut aussi des examens médicaux et psychotechniques."],
+["S",1,"Un détecteur de radar dans mon blouson :",["Autorisé s'il est éteint","Interdit : 1 500 € et 6 points","Interdit : 135 € et 3 points","Autorisé s'il vient d'une application"],[1],"Le détecteur est interdit (6 points, 1 500 €, saisie). Les applis d'aide à la conduite qui signalent des zones de danger, elles, sont autorisées."],
+["S",0,"Le refus de se soumettre au dépistage de l'alcoolémie est :",["Une contravention","Un délit","Sanctionné de 6 points","Sans retrait de points"],[1,2],"Refus de dépistage = délit, mêmes sanctions qu'une alcoolémie délictuelle, 6 points."],
+["S",0,"Le délit de fuite entraîne un retrait de :",["3 points","4 points","6 points","Aucun point"],[2],"6 points, et jusqu'à 3 ans de prison et 75 000 €."],
+["S",0,"Je roule sur la bande d'arrêt d'urgence pour remonter un bouchon :",["C'est toléré pour les motos","3 points","135 €","Interdit uniquement la nuit"],[1,2],"Circulation sur la BAU : 3 points et 135 €. Aucune tolérance pour les motos."],
+["S",0,"Prendre un sens interdit coûte :",["1 point","2 points","4 points","6 points"],[2],"Sens interdit : 4 points et 135 €."],
+
+// ---------- VITESSES & DISTANCES ----------
+["V",1,"Jeune permis, autoroute, il pleut. Ma vitesse maximale est :",["90 km/h","100 km/h","110 km/h","130 km/h"],[2],"Piège : en probatoire c'est 110 sur autoroute, et sous la pluie c'est aussi 110. On retient la plus basse : 110."],
+["V",0,"Sur autoroute par temps sec, avec un permis non probatoire :",["110 km/h","120 km/h","130 km/h","150 km/h"],[2],"130 km/h, 110 km/h par temps de pluie."],
+["V",0,"Route à deux chaussées séparées par un terre-plein central, temps de pluie, permis non probatoire :",["80 km/h","90 km/h","100 km/h","110 km/h"],[2],"110 par temps sec, 100 sous la pluie. En probatoire : 100 dans tous les cas."],
+["V",1,"Route bidirectionnelle hors agglomération signalée à 90 km/h, il pleut :",["70 km/h","80 km/h","90 km/h","50 km/h"],[1],"Sous la pluie, les routes à 90 passent à 80. En probatoire, c'est 80 dans tous les cas."],
+["V",1,"Brouillard, visibilité inférieure à 50 m, sur autoroute :",["50 km/h","70 km/h","80 km/h","110 km/h"],[0],"Visibilité < 50 m = 50 km/h sur TOUTES les routes, autoroute comprise."],
+["V",0,"Vitesse maximale dans une zone de rencontre :",["10 km/h","20 km/h","30 km/h","Allure du pas"],[1],"Zone de rencontre : 20 km/h, piétons prioritaires et autorisés sur la chaussée."],
+["V",0,"Dans une aire piétonne, une moto autorisée à y circuler roule :",["À 20 km/h","À 30 km/h","À l'allure du pas","Elle ne peut jamais y entrer"],[2],"Seuls certains véhicules sont autorisés, et toujours à l'allure du pas, en cédant aux piétons."],
+["V",0,"Quelle distance parcourt-on en 1 seconde à 90 km/h ?",["9 m","18 m","25 m","40 m"],[2],"90 ÷ 3,6 = 25 m. Astuce : dizaines × 3 donne environ 27 m."],
+["V",0,"La distance de sécurité minimale avec le véhicule de devant correspond à :",["1 seconde","2 secondes","3 secondes","50 m quelle que soit la vitesse"],[1],"2 secondes au minimum. Sur autoroute : au moins 2 traits de la bande d'arrêt d'urgence."],
+["V",1,"Si je double ma vitesse, ma distance de freinage est :",["Doublée","Triplée","Multipliée par 4","Inchangée avec l'ABS"],[2],"L'énergie augmente avec le carré de la vitesse : ×2 de vitesse = ×4 de distance de freinage."],
+["V",0,"La distance d'arrêt, c'est :",["La distance de freinage seule","La distance de réaction + la distance de freinage","La distance de sécurité","La distance parcourue en 2 secondes"],[1],"Distance d'arrêt = distance parcourue pendant le temps de réaction + distance de freinage."],
+["V",0,"Temps de réaction moyen d'un conducteur en forme :",["0,1 seconde","1 seconde","3 secondes","5 secondes"],[1],"Environ 1 seconde. Il augmente avec la fatigue, l'alcool, le téléphone."],
+["V",0,"Calcul rapide de la distance de freinage sur sol sec à 90 km/h :",["Environ 27 m","Environ 54 m","Environ 81 m","Environ 120 m"],[2],"(Vitesse ÷ 10)² = 9² = 81 m. Distance d'arrêt ≈ 27 + 81 = 108 m."],
+["V",1,"Plus je vais vite, plus mon champ visuel :",["S'élargit","Se rétrécit","Reste le même","S'élargit la nuit"],[1],"À l'arrêt ≈ 180°, à 130 km/h ≈ 30°. Les dangers latéraux deviennent invisibles."],
+["V",0,"Vitesse minimale sur la voie de gauche d'une autoroute, de jour, conditions normales :",["Il n'y en a pas","60 km/h","80 km/h","100 km/h"],[2],"80 km/h minimum sur la voie la plus à gauche, par bonnes conditions."],
+["V",0,"Probatoire, route à 2x2 voies limitée à 110 km/h, temps sec :",["90 km/h","100 km/h","110 km/h","80 km/h"],[1],"En probatoire : 110 sur autoroute, 100 sur route à chaussées séparées, 80 ailleurs."],
+
+// ---------- RÈGLES DE CIRCULATION ----------
+["R",0,"De jour, à moto, les feux de croisement doivent être :",["Éteints","Allumés","Allumés uniquement par mauvais temps","Remplacés par les feux de position"],[1],"Obligatoire de jour pour les 2 roues motorisés : c'est un facteur clé de visibilité."],
+["R",1,"Il pleut fort, je peux allumer mon feu de brouillard arrière :",["Oui","Non","Oui, seulement sur autoroute","Oui, s'il fait nuit"],[1],"Piège : le feu de brouillard arrière est réservé au brouillard et à la neige, pas à la pluie (il éblouit)."],
+["R",1,"Je sors d'un parking privé sur la route :",["J'ai la priorité à droite","Je dois céder le passage à tous","J'ai la priorité si personne ne klaxonne","Je cède seulement aux véhicules venant de gauche"],[1],"En sortant d'un parking, d'une propriété ou d'un chemin de terre, je cède le passage à tout le monde."],
+["R",1,"Rond-point avec panneau « Cédez le passage » à l'entrée :",["Je suis prioritaire en entrant","Les véhicules sur l'anneau sont prioritaires","C'est la priorité à droite","Celui qui klaxonne passe"],[1],"Avec « Cédez le passage », ceux qui circulent sur l'anneau sont prioritaires. Sans panneau, c'est la priorité à droite (ceux qui entrent)."],
+["R",1,"Place à sens giratoire sans aucun panneau à l'entrée :",["Ceux qui sont sur l'anneau sont prioritaires","Ceux qui entrent sont prioritaires (priorité à droite)","Les plus gros véhicules sont prioritaires","Le premier arrivé"],[1],"Sans signalisation, la priorité à droite s'applique : ceux qui entrent sont prioritaires."],
+["R",0,"Feu orange fixe :",["J'accélère pour passer","Je m'arrête sauf si cela est dangereux","J'ai la priorité","Je passe si personne ne vient"],[1],"Le feu orange fixe impose l'arrêt, sauf si l'arrêt ne peut plus se faire en sécurité."],
+["R",1,"Feu orange clignotant à une intersection :",["J'ai la priorité","Je passe avec prudence en appliquant la règle de priorité","Je m'arrête obligatoirement","C'est comme un feu vert"],[1],"Le clignotant signale un danger : on applique la signalisation en place ou la priorité à droite."],
+["R",0,"Un agent fait signe de passer alors que le feu est rouge :",["J'attends le vert","J'obéis à l'agent","Je klaxonne pour prévenir","Je fais demi-tour"],[1],"Les injonctions des agents priment sur les feux et les panneaux."],
+["R",0,"Je dois m'arrêter à un panneau STOP :",["Seulement si un véhicule arrive","Toujours, à la ligne d'arrêt","Seulement la nuit","Je peux ralentir fortement si la visibilité est bonne"],[1],"Arrêt complet obligatoire, pied à terre, à la limite de la chaussée, même si personne ne vient."],
+["R",1,"Feu vert, mais le carrefour est encombré :",["Je m'engage, c'est vert","Je ne m'engage pas","Je remonte la file pour passer","Je klaxonne"],[1],"On ne s'engage jamais dans une intersection si on risque d'y être immobilisé."],
+["R",0,"Je peux dépasser par la droite :",["Un véhicule qui a signalé qu'il tourne à gauche","Un tramway","Quand le véhicule de gauche roule trop lentement","Sur la bande d'arrêt d'urgence"],[0,1],"Dépassement par la droite seulement : véhicule qui tourne à gauche, tramway, et files ininterrompues."],
+["R",0,"Hors agglomération, je dépasse un cycliste en laissant au moins :",["50 cm","1 m","1,50 m","2 m"],[2],"1,50 m hors agglomération, 1 m en agglomération."],
+["R",0,"Dépassement interdit :",["Au sommet d'une côte sans visibilité","Dans un virage sans visibilité","Aux intersections où je ne suis pas prioritaire","Sur une route droite à ligne discontinue"],[0,1,2],"Pas de dépassement sans visibilité ni aux intersections non prioritaires."],
+["R",0,"Je suis en train d'être dépassé :",["J'accélère","Je serre à droite","Je maintiens ma vitesse sans accélérer","Je freine brusquement"],[1,2],"Ne jamais accélérer quand on est dépassé, se décaler à droite."],
+["R",1,"Une voie réservée aux bus et taxis en ville, à moto :",["Je peux l'emprunter","Interdite sauf panneau l'autorisant aux motos","Autorisée en cas de bouchon","Autorisée la nuit"],[1],"Les couloirs de bus sont interdits aux motos, sauf panonceau spécifique."],
+["R",1,"Le sas vélo devant un feu rouge :",["Accessible aux motos","Interdit aux motos","Accessible aux 125 cm³","Accessible si je suis seul"],[1],"Le sas est réservé aux cycles. Une moto qui s'y arrête est verbalisée."],
+["R",0,"Une piste cyclable :",["Est interdite aux motos","Est autorisée aux motos de moins de 125 cm³","Est autorisée pour remonter un bouchon","Peut servir à stationner"],[0],"Réservée aux cycles (et EDP). Interdite à tout véhicule motorisé."],
+["R",0,"Un piéton manifeste l'intention de traverser sur un passage piéton :",["Je klaxonne","Je lui cède le passage","Je passe s'il n'est pas encore sur la chaussée","Je fais un appel de phares"],[1],"Il suffit qu'il manifeste son intention : je dois céder (6 points sinon)."],
+["R",0,"En agglomération, un bus signale qu'il quitte son arrêt :",["Il est prioritaire si je peux ralentir sans danger","Je suis toujours prioritaire","Il doit attendre que la voie soit libre","Je dois klaxonner"],[0],"En agglomération, je dois laisser partir le bus si je peux le faire sans danger."],
+["R",0,"Sur autoroute, je rate ma sortie :",["Je fais marche arrière sur la BAU","Je continue jusqu'à la sortie suivante","Je fais demi-tour par le terre-plein","Je m'arrête et réfléchis"],[1],"Marche arrière et demi-tour sont interdits et extrêmement dangereux."],
+["R",0,"Je tombe en panne sur autoroute :",["Je reste sur la moto","Je mets mon gilet haute visibilité","Je me place derrière la glissière","J'appelle depuis une borne ou le 112"],[1,2,3],"Gilet, se mettre à l'abri derrière la glissière, appeler. Jamais rester sur la chaussée."],
+["R",0,"Klaxon en agglomération :",["Interdit sauf danger immédiat","Autorisé pour saluer","Autorisé pour prévenir que je dépasse","Libre"],[0],"En agglomération, l'avertisseur sonore n'est permis qu'en cas de danger immédiat."],
+["R",1,"Route à 3 voies à double sens, la voie du milieu sert à :",["Rouler plus vite","Dépasser","Tourner à gauche","Remonter les bouchons"],[1,2],"La voie centrale ne sert qu'au dépassement ou au tourne-à-gauche, pour les deux sens."],
+["R",0,"Une ligne jaune discontinue au bord du trottoir signifie :",["Arrêt et stationnement interdits","Stationnement interdit, arrêt autorisé","Livraisons uniquement","Rien de particulier"],[1],"Jaune discontinue = stationnement interdit. Jaune continue = arrêt ET stationnement interdits."],
+["R",1,"Marquage jaune temporaire et marquage blanc se contredisent :",["Le blanc prime","Le jaune prime","Je choisis","Aucun ne s'applique"],[1],"La signalisation temporaire (jaune) prime sur la signalisation permanente."],
+["R",0,"Stationner sa moto sur un trottoir :",["Autorisé si on ne gêne pas","Interdit, sauf signalisation l'autorisant","Autorisé pour les 125","Autorisé la nuit"],[1],"Stationnement très gênant sur trottoir, sauf emplacements prévus."],
+["R",0,"Dans un tunnel :",["Feux de croisement obligatoires","Demi-tour interdit","Dépassement toujours autorisé","Je peux m'arrêter pour une photo"],[0,1],"Feux allumés, pas de demi-tour, respect des distances (souvent signalées), arrêt seulement en urgence."],
+["R",1,"Les clignotants d'une moto ne se coupent pas toujours seuls. Après un changement de direction :",["Je les laisse, ce n'est pas grave","Je pense à les couper","Ils se coupent au prochain virage","Je les laisse pour être plus visible"],[1],"Un clignotant oublié trompe les autres usagers : un automobiliste peut te couper la route en croyant que tu tournes."],
+["R",0,"Je tourne à droite à une intersection, je dois surveiller :",["Les cyclistes et piétons sur ma droite","Rien, je suis sur ma droite","Le rétroviseur droit et l'angle mort","Uniquement les véhicules venant d'en face"],[0,2],"Contrôle rétro + angle mort à droite : cyclistes, trottinettes, piétons."],
+["R",0,"Un véhicule d'intervention (pompiers) arrive avec gyrophare et sirène :",["Je lui facilite le passage","Je l'ignore si j'ai la priorité","Je me range sans danger","Je le suis pour avancer plus vite"],[0,2],"Faciliter le passage, se ranger sans danger. Le suivre est interdit."],
+["R",1,"En montagne, sur une route trop étroite pour croiser :",["Le véhicule qui monte doit reculer","Le véhicule qui descend doit manœuvrer","Le plus rapide passe","Le plus gros recule"],[1],"C'est le véhicule qui descend qui doit se ranger ou reculer, sauf si la manœuvre est plus facile pour celui qui monte."],
+
+// ---------- SIGNALISATION ----------
+["L",0,"Hors agglomération, un panneau de danger est placé à environ :",["50 m du danger","150 m du danger","300 m du danger","500 m du danger"],[1],"150 m hors agglomération, 50 m en agglomération."],
+["L",0,"Un panneau rond à bord rouge indique :",["Un danger","Une interdiction","Une obligation","Une indication"],[1],"Rond rouge = interdiction. Rond bleu = obligation. Triangle = danger. Carré/rectangle = indication."],
+["L",0,"Un panneau rond à fond bleu indique :",["Une obligation","Une interdiction","Une fin d'interdiction","Un danger"],[0],"Fond bleu rond = obligation (piste cyclable obligatoire, direction obligatoire…)."],
+["L",0,"Un losange jaune bordé de blanc signifie :",["Route à caractère prioritaire","Fin de route prioritaire","Cédez le passage","Danger"],[0],"Je suis prioritaire aux prochaines intersections. Barré de noir = fin de route prioritaire."],
+["L",1,"Un panneau triangulaire « intersection avec priorité » (croix noire épaisse) :",["J'ai la priorité à la prochaine intersection seulement","J'ai la priorité sur toute la route","Je dois céder","C'est un passage à niveau"],[0],"Il ne vaut que pour la prochaine intersection, contrairement au losange jaune."],
+["L",0,"Un panneau temporaire à fond jaune :",["N'a aucune valeur","Prime sur les panneaux permanents","Est seulement une recommandation","S'adresse aux poids lourds"],[1],"La signalisation temporaire prime sur la permanente."],
+["L",0,"Passage à niveau, feux rouges clignotants :",["Je passe vite avant les barrières","Je m'arrête","Je passe si aucun train n'est visible","Je klaxonne"],[1],"Feu rouge clignotant = arrêt absolu, même sans barrière ni train visible."],
+["L",1,"Une ligne mixte (continue d'un côté, discontinue de l'autre). Je suis du côté discontinu :",["Je peux la franchir pour dépasser","Je ne peux jamais la franchir","Je peux la franchir uniquement pour tourner","Elle ne s'applique qu'aux voitures"],[0],"Du côté discontinu, franchissement autorisé. Du côté continu, interdit."],
+["L",0,"Des flèches de rabattement apparaissent sur une ligne discontinue :",["Je peux commencer un dépassement","Je dois me rabattre, une ligne continue arrive","C'est une voie d'accélération","Je dois tourner"],[1],"Elles annoncent une ligne continue : on termine ou on renonce au dépassement."],
+["L",0,"Une voie verte (panneau vert piéton + vélo) :",["Autorisée aux motos","Interdite aux véhicules à moteur","Autorisée aux 125 cm³","Autorisée à l'allure du pas"],[1],"Réservée aux piétons, cyclistes, cavaliers… pas aux véhicules à moteur."],
+["L",0,"Un panneau carré bleu avec un « P » :",["Parking","Stationnement interdit","Péage","Poste de police"],[0],"Panneau d'indication : lieu aménagé pour le stationnement."],
+["L",1,"Un panneau octogonal rouge :",["Cédez le passage","Stop","Sens interdit","Fin d'interdiction"],[1],"L'octogone est réservé au STOP : forme reconnaissable même de dos ou couvert de neige."],
+
+// ---------- ALCOOL, DROGUES, FATIGUE ----------
+["A",0,"Taux d'alcool maximal autorisé en période probatoire :",["0,2 g/L de sang","0,1 mg/L d'air expiré","0,5 g/L de sang","0,25 mg/L d'air expiré"],[0,1],"Probatoire : 0,2 g/L de sang = 0,1 mg/L d'air expiré. En pratique, zéro verre."],
+["A",0,"Taux maximal pour un conducteur confirmé :",["0,2 g/L de sang","0,5 g/L de sang","0,25 mg/L d'air expiré","0,8 g/L de sang"],[1,2],"0,5 g/L de sang = 0,25 mg/L d'air expiré."],
+["A",0,"Alcoolémie entre 0,5 et 0,8 g/L de sang :",["Contravention","Délit","6 points","135 €"],[0,2,3],"Contravention : 135 € et 6 points. À partir de 0,8 g/L, c'est un délit."],
+["A",0,"Alcoolémie de 0,8 g/L de sang ou plus :",["Contravention","Délit","Jusqu'à 2 ans de prison","6 points"],[1,2,3],"Délit : jusqu'à 2 ans de prison, 4 500 €, 6 points, suspension ou annulation du permis."],
+["A",1,"Pour éliminer l'alcool plus vite :",["Boire un café","Prendre une douche froide","Attendre","Manger du sucre"],[2],"Seul le temps fait baisser l'alcoolémie (environ 0,10 à 0,15 g/L par heure)."],
+["A",0,"Un verre « standard » servi au bar (bière, vin, whisky) contient :",["La même quantité d'alcool, environ 10 g","Plus d'alcool pour le whisky","Plus d'alcool pour la bière","Aucun repère possible"],[0],"Chaque verre standard ≈ 10 g d'alcool et fait monter l'alcoolémie d'environ 0,20 à 0,25 g/L."],
+["A",0,"Conduite après usage de stupéfiants :",["Délit","Contravention","6 points","3 points"],[0,2],"Délit, 6 points, jusqu'à 2 ans de prison. Le dépistage salivaire peut détecter le cannabis plusieurs jours après."],
+["A",1,"Alcool + cannabis multiplient le risque d'accident mortel par environ :",["2","5","14","29"],[3],"Le cumul alcool + cannabis multiplie le risque d'accident mortel par environ 29."],
+["A",0,"Médicament avec pictogramme triangle rouge niveau 3 :",["Soyez prudent","Soyez très prudent","Ne conduisez pas","Aucun effet sur la conduite"],[2],"Niveau 1 jaune : prudent. Niveau 2 orange : très prudent, avis médical. Niveau 3 rouge : ne pas conduire."],
+["A",0,"Signes de fatigue :",["Bâillements","Raideurs dans la nuque","Picotements des yeux","Envie d'accélérer"],[0,1,2],"Au premier signe : s'arrêter et faire une sieste de 15 à 20 minutes."],
+["A",0,"Sur un long trajet, il est conseillé de faire une pause :",["Toutes les 30 minutes","Toutes les 2 heures","Toutes les 4 heures","Quand le réservoir est vide"],[1],"Une pause toutes les 2 heures, et plus souvent à moto car la fatigue physique est plus forte."],
+["A",1,"Monter le son de l'intercom ou ouvrir la visière pour lutter contre la somnolence :",["C'est efficace","Ça ne fait que masquer la fatigue","C'est recommandé par la Sécurité routière","Ça marche si la musique est forte"],[1],"Seul le repos est efficace. Les « astuces » ne font que retarder le moment où l'on s'endort."],
+["A",0,"Un motard qui a bu de l'alcool :",["Évalue moins bien les distances","A un champ visuel réduit","Réagit plus vite","Prend plus de risques"],[0,1,3],"L'alcool allonge le temps de réaction, réduit le champ visuel et pousse à la prise de risque."],
+["A",1,"J'ai bu 2 verres il y a 1 heure. Je suis sous 0,5 g/L selon moi :",["Je peux conduire","Je fais un éthylotest ou j'attends","Je conduis prudemment","Je prends l'autoroute, c'est plus sûr"],[1],"La sensation ne vaut rien : l'alcoolémie atteint son maximum environ 1 h après la prise."],
+
+// ---------- ÉQUIPEMENT & MACHINE ----------
+["E",0,"Un casque moto homologué possède :",["Une étiquette d'homologation ECE 22.05 ou 22.06","Quatre autocollants rétroréfléchissants","Une visière teintée obligatoire","Un intercom intégré"],[0,1],"Étiquette ECE cousue + 4 bandes rétroréfléchissantes (avant, arrière, côtés)."],
+["E",1,"Mon casque est tombé de la selle sur le bitume, il ne présente aucune trace :",["Je le garde","Il peut être endommagé à l'intérieur","Il vaut mieux le remplacer","Je le fais vérifier en le secouant"],[1,2],"Le polystyrène intérieur peut être écrasé sans trace visible. Après un choc, on remplace."],
+["E",0,"Durée d'utilisation recommandée d'un casque :",["1 an","Environ 5 ans","15 ans","À vie"],[1],"Environ 5 ans : les matériaux vieillissent (UV, transpiration)."],
+["E",1,"Les gants homologués sont obligatoires pour :",["Le conducteur uniquement","Le passager aussi","Seulement hors agglomération","Seulement en hiver"],[1],"Conducteur ET passager, toute l'année, partout."],
+["E",0,"Le gilet de haute visibilité à moto :",["Je dois l'avoir avec moi","Je l'enfile en cas d'arrêt d'urgence","Il est facultatif","Il remplace les gants"],[0,1],"Obligatoire à disposition, à porter en cas d'arrêt d'urgence sur le bord de la route."],
+["E",1,"Visière teintée la nuit :",["Autorisée","Interdite","Autorisée en ville éclairée","Conseillée contre l'éblouissement"],[1],"Les visières teintées ne sont pas homologuées pour la conduite de nuit."],
+["E",0,"Une visière rayée :",["Je la garde","Elle diffuse la lumière et éblouit la nuit","Il faut la remplacer","Je la nettoie au papier essuie-tout"],[1,2],"Les rayures diffractent la lumière des phares. Nettoyer à l'eau savonneuse, pas au papier."],
+["E",0,"La pression des pneus se vérifie :",["Pneus chauds","Pneus froids","Après un long trajet","Peu importe"],[1],"Toujours à froid. À chaud, la pression lue est plus élevée."],
+["E",0,"Profondeur minimale des sculptures d'un pneu moto :",["0,5 mm","1 mm","1,6 mm","3 mm"],[1],"1 mm minimum, repéré par les témoins d'usure. Au-delà, changer vite, surtout pour la pluie."],
+["E",1,"Pneu sous-gonflé :",["Meilleure adhérence","Tenue de route dégradée","Échauffement et usure","Consommation en hausse"],[1,2,3],"Moto lourde à inscrire en virage, risque d'éclatement, usure rapide, surconsommation."],
+["E",1,"Pneus neufs :",["Adhérence maximale tout de suite","Glissants les premiers kilomètres","Il faut les roder progressivement","Il faut les gonfler à 4 bars"],[1,2],"Le produit de démoulage les rend glissants : quelques dizaines de km sans prise d'angle forte."],
+["E",0,"Une chaîne de transmission trop tendue :",["Améliore les performances","Use la chaîne et les roulements","Peut casser","Est conseillée avec passager"],[1,2],"Respecter le jeu indiqué par le constructeur, graisser régulièrement."],
+["E",0,"Le levier de frein devient spongieux :",["C'est normal en été","Il peut y avoir de l'air dans le circuit","Le liquide de frein est peut-être usé","Je roule plus vite pour chauffer les freins"],[1,2],"Faire purger et remplacer le liquide (environ tous les 2 ans, il absorbe l'humidité)."],
+["E",1,"L'ABS :",["Empêche les roues de se bloquer","Permet de garder la maîtrise en freinage d'urgence","Raccourcit toujours la distance de freinage","Rend inutile la distance de sécurité"],[0,1],"Il évite le blocage et la chute, mais ne fait pas de miracle sur la distance, surtout sur sol glissant."],
+["E",0,"Le témoin rouge de pression d'huile s'allume en roulant :",["Je continue jusqu'au garage","Je m'arrête dès que possible et coupe le moteur","J'accélère pour faire circuler l'huile","Je l'ignore s'il s'éteint au ralenti"],[1],"Témoin rouge = arrêt immédiat. Risque de casse moteur et de blocage de la roue arrière."],
+["E",0,"Un pot d'échappement non homologué :",["Autorisé s'il est plus beau","Interdit sur route","Autorisé hors agglomération","Autorisé s'il améliore les performances"],[1],"Interdit : amende et immobilisation possibles. Le bruit est aussi une nuisance."],
+["E",0,"Les vêtements les plus adaptés pour être vu :",["Couleurs sombres","Couleurs claires ou fluo","Éléments rétroréfléchissants","Peu importe avec les feux allumés"],[1,2],"Clair le jour, rétroréfléchissant la nuit : les motards sont souvent « pas vus »."],
+["E",0,"Les bottes ou chaussures montantes protègent :",["Les malléoles","Les orteils lors d'un choc","Rien de plus que des baskets","Les tibias"],[0,1,3],"En chute, le pied est très exposé. Les baskets n'offrent aucune protection."],
+["E",1,"Oreillettes Bluetooth sous le casque :",["Autorisées pour le GPS","Interdites, même une seule","Autorisées à faible volume","Autorisées pour le passager uniquement"],[1],"Tout dispositif placé dans ou contre l'oreille est interdit. Un intercom intégré au casque (haut-parleurs dans la coque) reste autorisé."],
+["E",0,"Le blouson moto doit idéalement avoir :",["Des protections aux coudes et épaules","Une dorsale","Une capuche","Des matériaux résistants à l'abrasion"],[0,1,3],"En glissade sur le bitume, un jean ou un coton fondent en quelques mètres."],
+["E",0,"Le contrôle technique des motos :",["N'existe pas","Est obligatoire","Se fait la première fois avant les 5 ans du véhicule","Se renouvelle ensuite tous les 3 ans"],[1,2,3],"Obligatoire depuis 2024 pour les 2 roues motorisés : premier contrôle dans les 6 mois avant les 5 ans, puis tous les 3 ans."],
+
+// ---------- CONDUITE MOTO ----------
+["C",0,"Sur sol sec, la majorité de la puissance de freinage vient :",["Du frein arrière","Du frein avant","Du frein moteur","Des deux à parts égales"],[1],"Environ 70 % à l'avant sur sec. Le transfert de masse charge la roue avant."],
+["C",1,"Sur sol mouillé, la répartition du freinage :",["Reste la même","S'équilibre davantage entre avant et arrière","Se fait uniquement à l'arrière","Se fait uniquement à l'avant"],[1],"Sur glissant, le transfert de masse est plus faible : on freine plus doucement et de façon plus équilibrée."],
+["C",0,"Le meilleur moment pour freiner avant un virage :",["En entrée de virage, moto inclinée","Avant le virage, moto droite","Au point de corde","En sortie de virage"],[1],"Freiner en ligne droite, moto verticale. Entrer en virage à vitesse adaptée."],
+["C",1,"Je dois freiner fort alors que je suis incliné en virage :",["Je freine fort de l'avant tout de suite","Je redresse la moto puis je freine","Je donne un coup de frein arrière bloquant","J'accélère"],[1],"Redresser d'abord, puis freiner fort moto droite. Moto inclinée, l'adhérence disponible est déjà utilisée."],
+["C",0,"Contre-braquage : pour tourner à droite à vitesse normale, je pousse :",["Sur la poignée gauche","Sur la poignée droite","Sur les deux","Sur le réservoir avec le genou gauche"],[1],"On pousse du côté où l'on veut aller : la moto s'incline de ce côté."],
+["C",0,"Dans un virage, je regarde :",["Ma roue avant","Le bord de la route","La sortie du virage, là où je veux aller","Le véhicule d'en face"],[2],"La moto va là où le regard se porte. Fixer un obstacle, c'est aller dedans."],
+["C",1,"Trajectoire de sécurité dans un virage à gauche :",["Je me place à gauche, près de l'axe","Je me place à droite de ma voie","Je coupe le virage","Je reste au centre"],[1],"Virage à gauche : rester à droite de sa voie (la tête ne dépasse jamais l'axe quand la moto penche)."],
+["C",1,"Trajectoire de sécurité dans un virage à droite :",["Je me place au bord droit","Je me place vers la gauche de ma voie sans mordre l'axe","Je coupe sur l'accotement","Je mords la ligne pour mieux voir"],[1],"Se décaler vers l'extérieur (gauche de sa voie) pour voir plus loin, sans mordre la ligne."],
+["C",0,"Pour démarrer en côte :",["Je tiens la moto au frein arrière","Je tiens la moto au frein avant","Je fais patiner l'embrayage longtemps","Je recule un peu"],[0],"Le frein arrière laisse la main droite libre pour l'accélérateur."],
+["C",0,"Gravillons sur la route :",["Je freine fort","Je garde la moto droite et un filet de gaz","Je change de trajectoire brusquement","J'évite les gestes brusques"],[1,3],"Pas de freinage brutal ni d'inclinaison forte : allure régulière et douce."],
+["C",0,"Peuvent être très glissants à moto :",["Les bandes blanches","Les plaques d'égout","Les rails de tram","Les feuilles mortes"],[0,1,2,3],"Surtout mouillés. Les traverser moto droite, sans freiner ni accélérer."],
+["C",0,"Je croise ou double un poids lourd par vent fort :",["Je serre fort le guidon","Je m'attends à un effet de souffle puis d'aspiration","Je m'écarte un peu si possible","Je dépasse au plus près"],[1,2],"Garder les bras souples et une marge latérale."],
+["C",0,"Je suis derrière un camion. Pour être vu :",["Je reste proche pour me protéger du vent","Je me place pour voir son rétroviseur","Je reste dans son angle mort","Je fais des appels de phares"],[1],"Si je ne vois pas le conducteur dans son rétroviseur, il ne me voit pas."],
+["C",0,"Avant de changer de file, je :",["Regarde le rétroviseur","Tourne la tête pour vérifier l'angle mort","Mets mon clignotant","Change brusquement de voie"],[0,1,2],"Rétro, clignotant, angle mort, puis manœuvre progressive."],
+["C",0,"Rouler en groupe :",["En quinconce","Côte à côte serrés","En respectant des distances de sécurité","En suivant aveuglément le premier"],[0,2],"Le quinconce donne une meilleure visibilité et de la marge. Chacun reste responsable de ses choix."],
+["C",0,"Guidonnage (le guidon se met à osciller) :",["Je serre fort le guidon","Je garde les bras souples","Je freine brutalement","Je réduis progressivement la vitesse"],[1,3],"Relâcher la pression sur le guidon, réduire l'allure progressivement, ne pas freiner brutalement."],
+["C",1,"Les accidents moto en intersection sont souvent dus à :",["Un automobiliste qui ne voit pas le motard","Un véhicule qui tourne à gauche devant le motard","Un défaut de la route","Un piéton"],[0,1],"Scénario typique : la voiture tourne à gauche et coupe la route du motard qu'elle n'a pas vu."],
+["C",0,"Les motards représentent environ quelle part des tués sur la route en France ?",["2 %","8 %","20 %","50 %"],[2],"Environ 20 % des tués alors que les 2 roues motorisés font environ 2 % du trafic."],
+["C",0,"De nuit, je suis ébloui par un véhicule en face :",["Je fixe ses phares","Je regarde le bord droit de la route","Je ralentis","Je fais des appels de phares répétés"],[1,2],"Regarder le bord droit et ralentir. La visière doit être propre et non rayée."],
+["C",0,"Position de conduite :",["Bras tendus et raides","Bras souples","Genoux serrés contre le réservoir","Pieds sur les repose-pieds, pointe vers l'extérieur"],[1,2],"Les genoux tiennent la moto, les bras restent souples pour diriger."],
+["C",1,"À l'approche d'une intersection, pour être vu, il est utile de :",["Me placer au centre de ma voie","Rouler au ras du trottoir","Réduire ma vitesse et me préparer à freiner","Couvrir le frein avant"],[0,2,3],"Rester visible, réduire l'allure, doigts prêts sur le frein."],
+["C",0,"Le frein moteur :",["Ralentit sans allumer le feu stop","Se fait en rétrogradant","Est utile en descente","Use les plaquettes"],[0,1,2],"Le feu stop ne s'allume pas : en cas de forte décélération, toucher légèrement le frein pour prévenir."],
+["C",1,"Je remonte une file de voitures à l'arrêt, le principal danger :",["Une portière qui s'ouvre","Un véhicule qui change de file","Un piéton qui traverse entre les voitures","Aucun, les voitures sont arrêtées"],[0,1,2],"Allure très modérée, toujours prêt à freiner, et c'est encadré par la loi."],
+["C",0,"Je mets ma béquille latérale et la moto est en pente descendante, côté béquille vers le bas :",["Risque que la moto tombe","Il vaut mieux engager la 1re","C'est idéal","Il faut laisser le moteur tourner"],[0,1],"Garer de préférence face à la pente, 1re engagée, sur sol dur."],
+["C",0,"Je dois éviter un obstacle soudain :",["Je regarde l'obstacle","Je regarde l'échappatoire","Je donne une impulsion sur le guidon du côté de l'évitement","Je freine fort pendant l'évitement"],[1,2],"Freiner avant OU éviter, mais pas les deux en même temps."],
+
+// ---------- MÉTÉO & ADHÉRENCE ----------
+["M",1,"Les premières pluies après une longue période sèche :",["Nettoient la route, elle accroche mieux","Rendent la route très glissante","N'ont pas d'effet","Ne gênent que les voitures"],[1],"Huile, gomme et poussière remontent et forment un film très glissant."],
+["M",0,"Aquaplaning à moto :",["Je freine fort","Je garde le guidon droit et relâche doucement les gaz","Je contre-braque","J'accélère"],[1],"Ne pas freiner ni tourner : la roue doit retrouver le contact avec le sol."],
+["M",0,"Neige ou verglas annoncés :",["Je pars quand même avec des pneus neufs","Je renonce à prendre la moto si possible","Je roule sur le bord de la route","Je gonfle davantage les pneus"],[1],"À moto, l'adhérence sur verglas est quasi nulle. Le meilleur choix est souvent de ne pas rouler."],
+["M",0,"Par temps froid :",["Les pneus mettent plus de temps à chauffer","L'adhérence est réduite au début","Les doigts engourdis freinent moins bien","Rien ne change"],[0,1,2],"Rouler doucement les premiers kilomètres et bien s'équiper."],
+["M",0,"Les zones à l'ombre en hiver :",["Peuvent garder du verglas","Sont plus sèches","N'ont pas d'importance","Sont plus adhérentes"],[0],"Sous les ponts, en forêt, en sortie de virage à l'ombre : prudence le matin."],
+["M",1,"Pluie : la distance de freinage :",["Diminue grâce à l'ABS","Augmente nettement","Reste identique","Est divisée par 2"],[1],"Sur sol mouillé l'adhérence baisse fortement : on augmente les distances et on réduit l'allure."],
+["M",0,"Vent latéral en sortie de tunnel ou de forêt :",["Je peux être déporté","Je garde les bras souples","Je réduis ma vitesse","Je serre fort le guidon"],[0,1,2],"Anticiper les rafales aux endroits découverts : ponts, sorties de tunnel, trouées."],
+["M",0,"Par forte chaleur, le bitume :",["Peut devenir glissant (goudron qui remonte)","Est toujours plus adhérent","Ne change pas","Peut rendre les raccords de goudron gras"],[0,3],"Les bandes de goudron fondues sont glissantes en virage."],
+["M",0,"Brouillard, je dois :",["Allumer les feux de croisement","Allumer le feu de brouillard arrière si visibilité très faible","Rouler en feux de route","Augmenter les distances"],[0,1,3],"Les feux de route éblouissent dans le brouillard (effet mur blanc)."],
+
+// ---------- PASSAGER & CHARGEMENT ----------
+["X",0,"Pour transporter un passager, la moto doit avoir :",["Une selle ou un siège passager","Des repose-pieds passager","Un dosseret","Une poignée"],[0,1],"Siège et repose-pieds obligatoires. La poignée ou la sangle est fortement conseillée."],
+["X",0,"Un enfant de moins de 5 ans :",["Ne peut jamais monter","Doit être assis sur un siège adapté avec système de retenue","Peut être devant le conducteur","Peut monter sans casque s'il est petit"],[1],"Moins de 5 ans : siège spécial avec retenue. Casque adapté et gants obligatoires dans tous les cas."],
+["X",0,"Avec un passager, je dois adapter :",["La pression des pneus","Le réglage des amortisseurs","Le réglage du phare","Ma distance de freinage"],[0,1,2,3],"Le poids change tout : freinage plus long, moto plus lente à inscrire en virage, phare qui éclaire plus haut."],
+["X",1,"Le passager, dans un virage :",["Se penche avec le conducteur","Se penche du côté opposé pour équilibrer","Reste dans l'axe du conducteur","Se lève"],[0,2],"Il suit le conducteur, dans son axe, sans contrebalancer."],
+["X",0,"Avant de rouler avec un passager novice, je lui explique :",["De garder les pieds sur les repose-pieds, même à l'arrêt","De ne pas bouger brusquement","De monter et descendre quand je le dis","De m'aider à freiner"],[0,1,2],"Un passager qui pose le pied à terre ou bouge brusquement peut déséquilibrer la moto."],
+["X",0,"Chargement de la moto :",["Le poids lourd au plus près du centre de la moto","Respecter la charge maximale","Bien arrimer les bagages","Peu importe si c'est attaché"],[0,1,2],"Un top-case lourd allège l'avant et peut provoquer du guidonnage."],
+["X",1,"Mon passager a 10 ans :",["Casque et gants homologués obligatoires","Gants facultatifs pour un enfant","Il doit atteindre les repose-pieds","Il peut s'asseoir devant moi"],[0,2],"Les gants sont obligatoires aussi pour les enfants passagers. Il doit pouvoir poser les pieds sur les repose-pieds."],
+
+// ---------- ACCIDENT & SECOURS ----------
+["U",0,"Ordre des actions sur un accident :",["Alerter, Protéger, Secourir","Protéger, Alerter, Secourir","Secourir, Protéger, Alerter","Alerter, Secourir, Protéger"],[1],"P.A.S. : Protéger pour éviter un sur-accident, Alerter, puis Secourir."],
+["U",0,"Numéro d'urgence européen valable partout dans l'UE :",["15","17","18","112"],[3],"112 partout. 15 SAMU, 17 police, 18 pompiers, 114 par SMS pour les personnes sourdes ou malentendantes."],
+["U",1,"Un motard accidenté est conscient et respire :",["Je lui retire le casque pour qu'il respire mieux","Je laisse le casque","Je lui parle et le rassure","Je le fais marcher"],[1,2],"Ne jamais retirer le casque d'un motard qui respire : risque de lésion de la colonne."],
+["U",0,"On retire le casque d'un motard seulement :",["S'il le demande","S'il ne respire pas ou vomit, si possible à deux","Pour l'identifier","Toujours"],[1],"Uniquement en cas d'arrêt respiratoire ou de vomissement, en maintenant tête et nuque alignées."],
+["U",0,"Une victime inconsciente qui respire :",["Je la mets en Position Latérale de Sécurité","Je lui donne à boire","Je la secoue","Je la laisse sur le dos sans surveillance"],[0],"PLS pour libérer les voies aériennes, puis surveiller la respiration en attendant les secours."],
+["U",0,"Une victime ne respire plus :",["J'alerte","Je commence le massage cardiaque","J'utilise un défibrillateur si disponible","J'attends les secours sans rien faire"],[0,1,2],"Alerter, masser (environ 100 à 120 compressions par minute), défibrillateur dès qu'il arrive."],
+["U",0,"Une victime saigne abondamment :",["J'appuie fortement sur la plaie","Je lui donne à boire","Je la laisse seule pour aller chercher de l'aide","Je fais un garrot avec n'importe quoi immédiatement"],[0],"Compression directe sur la plaie (avec un tissu si possible), puis alerter."],
+["U",1,"Je donne à boire à un blessé qui a soif :",["Oui, de l'eau","Oui, un peu d'alcool pour le réchauffer","Non, jamais","Seulement s'il est conscient"],[2],"Jamais : une opération peut être nécessaire et il risque de s'étouffer."],
+["U",0,"Pour protéger les lieux d'un accident :",["J'allume mes feux de détresse","J'enfile mon gilet","Je fais ralentir les usagers en amont","Je me mets au milieu de la chaussée"],[0,1,2],"Se protéger d'abord soi-même, puis baliser bien en amont."],
+["U",0,"Constat amiable :",["Il faut l'envoyer à l'assureur dans les 5 jours ouvrés","On peut le modifier après signature","Chaque conducteur garde un exemplaire","Le croquis est utile"],[0,2,3],"Après signature, on ne modifie plus rien. Délai : 5 jours ouvrés."],
+["U",1,"J'arrive le premier sur un accident grave, des secours sont déjà alertés par un témoin :",["Je pars, c'est géré","Je vérifie que l'alerte a bien été donnée","Je protège et j'aide si je peux","Je filme pour les assurances"],[1,2],"Ne pas s'arrêter pour porter assistance peut constituer une non-assistance à personne en danger."],
+
+// ---------- PAPIERS & ENVIRONNEMENT ----------
+["D",0,"À moto, je dois avoir sur moi :",["Mon permis de conduire","Le certificat d'immatriculation","La carte verte d'assurance","Le contrôle technique papier"],[0,1],"Depuis avril 2024, la carte verte n'existe plus : l'assurance est vérifiée via le fichier des véhicules assurés."],
+["D",0,"L'assurance minimale obligatoire couvre :",["Les dommages causés aux autres","Les dommages de ma moto","Le vol","Mes propres blessures"],[0],"Responsabilité civile (« au tiers ») obligatoire. Rouler sans assurance est un délit."],
+["D",0,"Je déménage. Je dois modifier le certificat d'immatriculation dans :",["15 jours","1 mois","3 mois","1 an"],[1],"1 mois pour déclarer la nouvelle adresse."],
+["D",0,"Je vends ma moto :",["Je remets le certificat de cession","Je déclare la cession dans les 15 jours","Je barre la carte grise avec la mention « vendu le » et l'heure","Je garde la plaque"],[0,1,2],"Déclaration en ligne dans les 15 jours pour ne plus être responsable des infractions."],
+["D",0,"Plaque d'immatriculation d'une moto :",["Format 210 × 130 mm","Doit être lisible","Peut être inclinée pour le style","Doit porter le logo régional et le numéro de département"],[0,1,3],"Plaque non conforme ou illisible : amende. Une plaque inclinée ou masquée est interdite."],
+["D",0,"La vignette Crit'Air :",["Classe les véhicules selon leurs émissions","Peut être obligatoire dans les zones à faibles émissions","Concerne aussi les motos","Remplace l'assurance"],[0,1,2],"À coller sur la moto, souvent sur la fourche ou le garde-boue avant."],
+["D",0,"Éco-conduite à moto :",["Anticiper pour éviter les freinages","Monter les rapports tôt","Accélérer fort aux feux","Vérifier la pression des pneus"],[0,1,3],"Moins de consommation, moins d'usure, plus de sécurité."],
+["D",0,"À l'arrêt prolongé (plus de quelques dizaines de secondes) :",["Je coupe le moteur","Je laisse tourner pour le refroidir","Je donne des coups de gaz","Je laisse tourner pour la batterie"],[0],"Moins de pollution, de bruit et de consommation."],
+["D",1,"Un écran vidéo dans mon champ de vision en roulant :",["Interdit sauf aide à la navigation","Autorisé pour regarder des vidéos à l'arrêt seulement","Autorisé s'il est fixé","Interdit même pour un GPS"],[0,1],"Le GPS est autorisé. Regarder une vidéo en conduisant : 1 500 € et 3 points."],
+["D",0,"Le bruit d'une moto :",["N'est pas réglementé","Peut être contrôlé et sanctionné","Est une nuisance pour les riverains","Est un facteur de sécurité obligatoire"],[1,2],"Des radars sonores sont testés dans plusieurs villes."],
+];
+
+const QS=RAW.map((r,i)=>({id:i,th:r[0],trap:!!r[1],q:r[2],o:r[3],a:r[4],e:r[5]}));
+
+/* ============ STOCKAGE ============ */
+const KEY="rafale-etm-v1";
+let ST={q:{},best:0,exams:0,passed:0};
+try{const s=localStorage.getItem(KEY); if(s) ST=Object.assign(ST,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(ST))}catch(e){}}
+function rec(id,ok){const r=ST.q[id]||{c:0,w:0,last:null}; ok?r.c++:r.w++; r.last=ok?1:0; ST.q[id]=r; save();}
+const errorsList=()=>QS.filter(q=>ST.q[q.id]&&ST.q[q.id].last===0);
+const seenCount=()=>Object.keys(ST.q).length;
+
+/* ============ OUTILS ============ */
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const L="ABCD";
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,1800)}
+// mélange l'ordre des réponses à chaque tirage
+function prep(q){const idx=shuffle(q.o.map((_,i)=>i));return {...q,o:idx.map(i=>q.o[i]),a:idx.map((i,k)=>q.a.includes(i)?k:-1).filter(k=>k>=0)}}
+// tirage pondéré : erreurs et questions jamais vues sortent plus souvent
+function weight(q){const r=ST.q[q.id];if(!r)return 3;return 1+r.w*3-(r.c*0.5)+(r.last===0?4:0)+(q.trap?1:0)}
+function pickWeighted(pool,n,avoid){const out=[];let p=pool.filter(q=>!avoid||!avoid.has(q.id));if(p.length<n)p=pool.slice();
+  p=p.map(q=>({q,w:Math.max(.4,weight(q))*Math.random()}));p.sort((a,b)=>b.w-a.w);return p.slice(0,n).map(x=>x.q)}
+
+/* ============ ÉTAT ============ */
+let S=null, timerInt=null;
+
+/* ============ ACCUEIL ============ */
+function home(){
+  stopTimer(); S=null;
+  const errs=errorsList().length, traps=QS.filter(q=>q.trap).length;
+  const total=Object.values(ST.q).reduce((s,r)=>s+r.c+r.w,0), good=Object.values(ST.q).reduce((s,r)=>s+r.c,0);
+  const chips=Object.keys(TH).map(k=>{
+    const qs=QS.filter(q=>q.th===k);
+    const c=qs.reduce((s,q)=>s+(ST.q[q.id]?.c||0),0), w=qs.reduce((s,q)=>s+(ST.q[q.id]?.w||0),0);
+    const pct=c+w?Math.round(c/(c+w)*100):null;
+    return `<button class="chip" data-th="${k}">${TH[k]} <span class="pct">${qs.length}q${pct!==null?" · "+pct+"%":""}</span><span class="bar"><i style="width:${pct||0}%"></i></span></button>`}).join("");
+  app.innerHTML=`
+  <div class="top"><div class="brand"><h1>Rafale<span>ETM</span></h1><small>code moto</small></div>
+    <button class="ghost" id="reset">Remettre à zéro</button></div>
+  <section class="hero">
+    <div class="road"></div>
+    <h2>${QS.length} questions qui font tomber les candidats</h2>
+    <p>Chiffres à connaître par cœur, pièges de formulation, réponses multiples comme à l'examen. 40 questions, 35 bonnes réponses pour l'avoir.</p>
+    <div class="kpis">
+      <div><b>${seenCount()}/${QS.length}</b>vues</div>
+      <div><b>${total?Math.round(good/total*100)+"%":"–"}</b>réussite</div>
+      <div><b>${ST.best?ST.best+"/40":"–"}</b>meilleure série</div>
+      <div><b>${ST.passed}/${ST.exams}</b>séries réussies</div>
+    </div>
+  </section>
+  <div class="modes">
+    <button class="mode primary" data-m="exam"><h3>Série examen <span class="tag">40Q · 20S</span></h3><p>Conditions réelles : chrono par question, aucune correction avant la fin. 5 fautes maximum.</p></button>
+    <button class="mode" data-m="rafale"><h3>Rafale <span class="tag">∞</span></h3><p>Correction immédiate, passage automatique quand c'est juste. Les questions ratées reviennent plus souvent.</p></button>
+    <button class="mode" data-m="trap"><h3>Pièges <span class="tag">${traps}</span></h3><p>Uniquement les questions à double lecture et les exceptions qui coûtent des points.</p></button>
+    <button class="mode" data-m="errors" ${errs?"":"disabled"}><h3>Mes erreurs <span class="tag">${errs}</span></h3><p>${errs?"Les questions ratées à ta dernière tentative, jusqu'à ce qu'elles soient justes.":"Aucune erreur enregistrée pour l'instant."}</p></button>
+  </div>
+  <section class="themes"><span class="label">Révision par thème</span><div class="chips">${chips}</div></section>
+  <div class="keys"><span><kbd>A</kbd>–<kbd>D</kbd> ou <kbd>1</kbd>–<kbd>4</kbd> cocher</span><span><kbd>Entrée</kbd> valider / suivant</span><span><kbd>Échap</kbd> accueil</span></div>`;
+  app.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>start(b.dataset.m));
+  app.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>start("theme",b.dataset.th));
+  $("#reset").onclick=()=>{const b=$("#reset");if(b.dataset.c){ST={q:{},best:0,exams:0,passed:0};save();home();toast("Statistiques effacées")}else{b.dataset.c=1;b.textContent="Confirmer ?";setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent="Remettre à zéro"}},2500)}};
+}
+
+/* ============ DÉMARRAGE ============ */
+function start(mode,th){
+  let list;
+  if(mode==="exam") list=pickWeighted(QS,40);
+  else if(mode==="trap") list=shuffle(QS.filter(q=>q.trap));
+  else if(mode==="errors") list=shuffle(errorsList());
+  else if(mode==="theme") list=shuffle(QS.filter(q=>q.th===th));
+  else list=[];
+  S={mode,th,list:list.map(prep),i:0,sel:new Set(),answered:false,results:[],streak:0,bestStreak:0,recent:new Set()};
+  if(mode==="rafale") S.list=[prep(pickWeighted(QS,1)[0])];
+  render();
+}
+const isExam=()=>S.mode==="exam";
+const total=()=>S.mode==="rafale"?null:S.list.length;
+
+/* ============ QUESTION ============ */
+function render(){
+  const q=S.list[S.i];
+  S.sel=new Set(); S.answered=false;
+  const multi=q.a.length>1;
+  const n=total();
+  const lane=n?`<div class="lane">${S.list.map((_,k)=>{
+      let c=""; if(k<S.i){c=isExam()?"done":(S.results[k]?.ok?"ok":"ko")} else if(k===S.i)c="cur"; return `<i class="${c}"></i>`}).join("")}</div>`:"";
+  const title={exam:"Série examen",rafale:"Rafale",trap:"Pièges",errors:"Mes erreurs",theme:TH[S.th]}[S.mode];
+  app.innerHTML=`
+  <div class="qhead">
+    <button class="ghost" id="quit">← ${title}</button>
+    <div class="qmeta">
+      ${!isExam()&&q.trap?'<span class="pill trap">PIÈGE</span>':""}
+      <span class="pill">${TH[q.th]}</span>
+      <span class="counter">${n?`${S.i+1}<small>/${n}</small>`:`${S.results.filter(r=>r.ok).length}<small>/${S.results.length}</small>`}</span>
+    </div>
+  </div>
+  ${lane}
+  ${isExam()?'<div class="timer" id="timer"><i></i></div>':""}
+  <div class="card anim">
+    <p class="question">${esc(q.q)}</p>
+    <div class="hint">${isExam()?"Une ou plusieurs bonnes réponses":(multi?"Plusieurs bonnes réponses":"Une seule bonne réponse")}</div>
+    <div class="opts">${q.o.map((o,k)=>`<button class="opt" data-k="${k}" id="opt${k}"><span class="k">${L[k]}</span><span class="t">${esc(o)}</span></button>`).join("")}</div>
+    <div id="fb"></div>
+    <div class="actions">
+      ${S.mode==="rafale"?`<span class="streak" style="margin-right:auto;align-self:center">Série en cours <b>${S.streak}</b> · record <b>${S.bestStreak}</b></span>`:""}
+      ${S.mode==="rafale"?'<button class="btn sec" id="stop">Terminer</button>':""}
+      <button class="btn y" id="go" disabled>Valider</button>
+    </div>
+  </div>`;
+  app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>toggle(+b.dataset.k));
+  $("#go").onclick=action;
+  $("#quit").onclick=()=>{ if(S.results.length && S.mode!=="exam") results(); else home(); };
+  if($("#stop")) $("#stop").onclick=results;
+  if(isExam()) startTimer();
+}
+function toggle(k){
+  if(S.answered)return; const q=S.list[S.i]; if(k>=q.o.length)return;
+  S.sel.has(k)?S.sel.delete(k):S.sel.add(k);
+  document.querySelectorAll(".opt").forEach((b,i)=>b.classList.toggle("sel",S.sel.has(i)));
+  $("#go").disabled=S.sel.size===0;
+}
+function action(){ if(S.answered) next(); else if(S.sel.size||isExam()) validate(); }
+function validate(){
+  stopTimer();
+  const q=S.list[S.i];
+  const ok=q.a.length===S.sel.size&&q.a.every(k=>S.sel.has(k));
+  S.answered=true;
+  S.results[S.i]={q,sel:[...S.sel],ok};
+  rec(q.id,ok);
+  if(isExam()){ next(); return; }
+  S.streak=ok?S.streak+1:0; S.bestStreak=Math.max(S.bestStreak,S.streak);
+  document.querySelectorAll(".opt").forEach((b,i)=>{b.disabled=true;
+    const good=q.a.includes(i), s=S.sel.has(i);
+    if(good&&s)b.classList.add("right"); else if(s)b.classList.add("wrong"); else if(good)b.classList.add("missed","right");});
+  $("#fb").innerHTML=`<div class="fb ${ok?"ok":"ko"}"><strong>${ok?"Juste":"Faux"}</strong>${ok?"":`<p>Bonne réponse : <b>${q.a.map(k=>L[k]).join(" + ")}</b></p>`}<p>${esc(q.e)}</p></div>`;
+  const go=$("#go"); go.disabled=false; go.textContent="Suivante →"; go.focus();
+  if(S.mode==="rafale"){const st=document.querySelector(".streak");if(st)st.innerHTML=`Série en cours <b>${S.streak}</b> · record <b>${S.bestStreak}</b>`;
+    const c=document.querySelector(".counter");if(c)c.innerHTML=`${S.results.filter(r=>r.ok).length}<small>/${S.results.length}</small>`;}
+  if(ok){ const id=S.i; setTimeout(()=>{ if(S&&S.i===id&&S.answered) next(); }, q.e.length>140?2600:1700); }
+}
+function next(){
+  if(S.mode==="rafale"){
+    S.recent.add(S.list[S.i].id); if(S.recent.size>25){S.recent.delete(S.recent.values().next().value)}
+    S.list.push(prep(pickWeighted(QS,1,S.recent)[0])); S.i++; render(); return;
+  }
+  if(S.i<S.list.length-1){S.i++;render()} else results();
+}
+
+/* ============ CHRONO ============ */
+function startTimer(){
+  stopTimer(); const dur=20000, t0=performance.now(); const el=$("#timer");
+  timerInt=setInterval(()=>{const r=Math.max(0,1-(performance.now()-t0)/dur);
+    if(el){el.firstChild.style.transform=`scaleX(${r})`;el.classList.toggle("low",r<.25)}
+    if(r<=0){stopTimer();validate()}},100);
+}
+function stopTimer(){clearInterval(timerInt);timerInt=null}
+
+/* ============ RÉSULTATS ============ */
+function results(){
+  stopTimer();
+  const R=S.results.filter(Boolean), good=R.filter(r=>r.ok).length, n=R.length;
+  const exam=isExam();
+  if(exam){ST.exams++; if(good>=35)ST.passed++; ST.best=Math.max(ST.best,good); save();}
+  const pass=exam?good>=35:(n?good/n>=.875:false);
+  let filter="ko";
+  const draw=()=>{
+    const items=R.filter(r=>filter==="all"||!r.ok);
+    $("#rv").innerHTML=items.length?items.map(r=>`<div class="rv ${r.ok?"ok":""}">
+      <div class="rq">${r.q.trap?'<span class="pill trap">PIÈGE</span> ':""}${esc(r.q.q)}</div>
+      <div class="ra">Bonne réponse : <b>${r.q.a.map(k=>esc(r.q.o[k])).join(" · ")}</b></div>
+      ${r.ok?"":`<div class="ry">Ta réponse : ${r.sel.length?r.sel.map(k=>esc(r.q.o[k])).join(" · "):"aucune (temps écoulé)"}</div>`}
+      <div class="re">${esc(r.q.e)}</div></div>`).join(""):`<p class="label">Aucune erreur, rien à revoir.</p>`;
+    document.querySelectorAll("[data-f]").forEach(b=>b.classList.toggle("sel",b.dataset.f===filter));
+  };
+  app.innerHTML=`
+  <div class="top"><button class="ghost" id="back">← Accueil</button><span class="label">${exam?"Série examen":"Bilan"}</span></div>
+  <section class="card">
+    <div class="score"><div class="big">${good}<small>/${n}</small></div>
+      ${exam?`<span class="verdict ${pass?"pass":"fail"}">${pass?"Reçu":"Ajourné"}</span>`:""}</div>
+    <p style="margin:0;color:var(--muted)">${exam?(pass?`Moins de 6 fautes : c'est le niveau de l'examen. ${40-good} faute${40-good>1?"s":""}.`:`${40-good} fautes, il en faut 5 maximum. Revois les explications ci-dessous puis lance « Mes erreurs ».`):`${n-good} erreur${n-good>1?"s":""} sur ${n} questions${S.bestStreak?` · meilleure série ${S.bestStreak}`:""}.`}</p>
+    <div class="actions" style="justify-content:flex-start">
+      <button class="btn y" id="again">${exam?"Nouvelle série":"Recommencer"}</button>
+      ${errorsList().length?`<button class="btn sec" id="errs">Revoir mes erreurs (${errorsList().length})</button>`:""}
+    </div>
+  </section>
+  <div class="filters"><button class="chip" data-f="ko">Erreurs (${n-good})</button><button class="chip" data-f="all">Toutes (${n})</button></div>
+  <div class="review" id="rv"></div>`;
+  $("#back").onclick=home;
+  $("#again").onclick=()=>start(S.mode,S.th);
+  if($("#errs"))$("#errs").onclick=()=>start("errors");
+  document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{filter=b.dataset.f;draw()});
+  draw(); S.done=true; window.scrollTo(0,0);
+}
+
+/* ============ CLAVIER ============ */
+document.addEventListener("keydown",e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==="Escape"){home();return}
+  if(!S||S.done)return;
+  const k=e.key.toUpperCase(); let i=L.indexOf(k); if(i<0&&/^[1-4]$/.test(e.key))i=+e.key-1;
+  if(i>=0&&k.length===1){e.preventDefault();toggle(i);return}
+  if(e.key==="Enter"||(e.key===" "&&S.answered)){e.preventDefault();action()}
+});
+
+home();
+</script>
